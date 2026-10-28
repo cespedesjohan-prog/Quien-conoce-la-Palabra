@@ -205,7 +205,7 @@ function configureRoleEntry(){
  }
 }
 configureRoleEntry();
-\n$("createBtn").onclick=async()=>{const url=$("supabaseUrl").value.trim(),key=$("supabaseKey").value.trim(),n=$("hostName").value.trim()||"Presentador";if(!url||!key){toast("Introduce la URL y la clave pública de Supabase");return}const code=Math.random().toString(36).slice(2,8).toUpperCase();try{await connect(url,key,code,"host",n)}catch(e){toast("Error de conexión: "+e.message)}};
+$("createBtn").onclick=async()=>{const url=$("supabaseUrl").value.trim(),key=$("supabaseKey").value.trim(),n=$("hostName").value.trim()||"Presentador";if(!url||!key){toast("Introduce la URL y la clave pública de Supabase");return}const code=Math.random().toString(36).slice(2,8).toUpperCase();try{await connect(url,key,code,"host",n)}catch(e){toast("Error de conexión: "+e.message)}};
 $("joinBtn").onclick=async()=>{const url=$("joinUrl").value.trim(),key=$("joinKey").value.trim(),code=$("joinCode").value.trim().toUpperCase(),n=$("playerName").value.trim();if(!url||!key||!code||!n){toast("Completa código, nombre, URL y clave pública");return}try{await connect(url,key,code,"player",n)}catch(e){toast("Error de conexión: "+e.message)}};
 
 
@@ -215,7 +215,7 @@ $("audienceJoinBtn").onclick=async()=>{
  if(!url||!key||!code){toast("Completa código, URL y clave pública");return}
  try{await connect(url,key,code,"audience",n)}catch(e){toast("Error de conexión: "+e.message)}
 };
-\n$("revealBtn").onclick=async()=>{
+$("revealBtn").onclick=async()=>{
  const q=questions[state.index];state.answerers=state.answerers||{};state.eliminated=state.eliminated||{};state.players.forEach(p=>{
    const answer=state.answerers[p.id];
    if(answer!==undefined && answer!=="ABCD"[q.a] && !state.eliminated[p.id]){

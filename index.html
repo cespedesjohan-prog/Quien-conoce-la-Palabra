@@ -21,7 +21,7 @@
  <div class="status"><span class="pill">SALA <b id="roomBadge">------</b></span><span class="pill">PREGUNTA <b id="qNum">1</b>/60</span><span class="pill">PUNTOS <b id="score">0</b></span><span class="pill timer-pill" id="timerPill">⏱ 30 s</span><span class="pill">ROL <b id="role">Participante</b></span></div>
  <div class="grid">
   <div class="panel"><div class="big-timer-wrap"><div class="big-timer" id="bigTimer"><span class="timer-label">Tiempo</span><span class="timer-number" id="bigTimerNumber">30</span><span class="timer-unit">SEGUNDOS</span></div></div><div class="row" style="justify-content:space-between"><span class="eyebrow" id="level">2 Timoteo</span><span class="pill" id="value">100 puntos</span></div><div class="question" id="question">Esperando al presentador…</div><div class="answers" id="answers"></div><div id="feedback" class="notice hidden" style="margin-top:14px"></div><div id="playerStatus" class="notice" style="margin-top:14px">Esperando la siguiente pregunta del presentador.</div></div>
-  <div class="panel"><h2>🏆 Escalera de puntos</h2><div id="roundLabel" class="notice" style="margin:0 0 10px">Ronda 1 de 4 · Preguntas 1–15</div><div id="prizes"></div><div class="notice" style="margin-top:12px"><b style="color:#ffe3a1">Niveles seguros:</b> Cierre de ronda: preguntas 15, 30, 45 y 60.</div><div id="hostControls" class="hidden" style="margin-top:15px"><h3 class="section-title">Control del presentador</h3><div class="row"><button class="btn" id="revealBtn">Revelar respuesta</button><button class="btn" id="nextBtn">Siguiente pregunta →</button></div><p class="small">Si un participante responde mal, queda eliminado y no puede responder más preguntas. Revela la respuesta antes de avanzar.</p></div><div id="roomPlayers" class="notice" style="margin-top:12px">Participantes conectados: —</div></div>
+  <div class="panel"><h2>🏆 Escalera de puntos</h2><div id="roundLabel" class="notice" style="margin:0 0 10px">Ronda 1 de 4 · Preguntas 1–15</div><div id="prizes"></div><div class="notice" style="margin-top:12px"><b style="color:#ffe3a1">Niveles seguros:</b> Cierre de ronda: preguntas 15, 30, 45 y 60.</div><div id="hostControls" class="hidden" style="margin-top:15px"><h3 class="section-title">Control del presentador</h3><div class="row"><button class="btn" id="startBtn">▶ Iniciar primera pregunta</button><button class="btn" id="revealBtn">Revelar respuesta</button><button class="btn" id="nextBtn">Siguiente pregunta →</button></div><p class="small">Si un participante responde mal, queda eliminado y no puede responder más preguntas. Revela la respuesta antes de avanzar.</p></div><div id="roomPlayers" class="notice" style="margin-top:12px">Participantes conectados: —</div></div>
   <div class="panel full"><h3 class="section-title">Comodines de la sala</h3><div class="lifes"><button class="life" data-life="5050">½<br>50:50</button><button class="life" data-life="friend">☎<br>Llamada a un amigo</button><button class="life" data-life="audience">▥<br>El público</button><button class="life" data-life="bible">▤<br>Consulta la Biblia</button><button class="life" data-life="expert">✦<br>Experto</button></div><p class="small lifes-help">🎤 <b>Cómo activarlos:</b> el presentador debe usarlos mientras la pregunta está activa y antes de revelar la respuesta. Pulsa un comodín para activarlo en toda la sala; cada uno se puede usar una sola vez por partida. Si están atenuados, pulsa <b>Siguiente pregunta</b> después de revelar la anterior.</p></div>
  </div>
  <div class="row" style="margin-top:14px"><button class="btn secondary" id="leaveBtn">Salir de la sala</button><button class="btn secondary hidden" id="copyBtn">Copiar código</button></div>
@@ -122,8 +122,12 @@ function startAmbient(){
 function stopAmbient(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
 function effect(kind){if(!soundOn)return;if(kind==="correct"){tone(523.25,.18,"sine",.07);tone(659.25,.2,"sine",.07,.14);tone(783.99,.32,"sine",.07,.29)}else if(kind==="wrong"){tone(220,.32,"sawtooth",.055);tone(164.81,.42,"sawtooth",.05,.2)}else if(kind==="tick"){tone(880,.09,"square",.045)}else if(kind==="timeout"){tone(440,.22,"triangle",.065);tone(330,.3,"triangle",.06,.24)}}
 $("soundBtn").addEventListener("click",async()=>{
- if(!soundOn){soundOn=true;const c=audioReady();if(c){try{await c.resume()}catch(e){};startAmbient();tone(660,.18,"sine",.075);$("soundBtn").textContent="🔇 Silenciar sonido";toast("Sonido activado. Si no se escucha, revisa el volumen del equipo.");}
- }else{soundOn=false;stopAmbient();$("soundBtn").textContent="🔊 Activar sonido";}
+ if(!soundOn){
+   const c=audioReady();
+   if(!c)return;
+   try{await c.resume();soundOn=true;tone(660,.22,"sine",.12);setTimeout(()=>tone(880,.22,"sine",.12),180);startAmbient();$("soundBtn").textContent="🔇 Silenciar sonido";toast("Prueba de audio: deberías escuchar dos tonos.");}
+   catch(e){soundOn=false;toast("No se pudo activar el audio. Revisa permisos y volumen del navegador.");}
+ }else{soundOn=false;stopAmbient();$("soundBtn").textContent="🔊 Activar sonido";toast("Sonido silenciado.");}
 });
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&soundOn){const c=audioReady();if(c&&c.state==="running")startAmbient()}});
 function startCountdown(){if(countdownLoop)clearInterval(countdownLoop);countdownLoop=setInterval(()=>{const active=!!state&&state.status==="active"&&!state.revealed&&!state.finished&&!!state.startedAt;if(!active){$("timerPill").textContent="⏱ Pausado";$("timerPill").classList.remove("urgent");$("bigTimerNumber").textContent=state?.revealed?"✓":"30";$("bigTimer").classList.remove("urgent");return}const left=Math.max(0,30-Math.floor((Date.now()-state.startedAt)/1000));$("timerPill").textContent=`⏱ ${left} s`;$("timerPill").classList.toggle("urgent",left<=10);$("bigTimerNumber").textContent=String(left);$("bigTimer").classList.toggle("urgent",left<=10);if(left>0&&left<=10&&role==="host"&&left!==lastTickSecond){lastTickSecond=left;effect("tick")}if(left===0&&role==="host"&&!state.revealed){state.revealed=true;state.status="revealed";effect("timeout");send("state",{state});render()}},250)}
@@ -138,7 +142,7 @@ let lastRevealState=false;function render(){let q=questions[state.index];if(!q)r
  $("roundLabel").textContent=`Ronda ${roundIndex+1} de 4 · Preguntas ${roundStart+1}–${roundEnd}`;
  $("prizes").innerHTML=questions.slice(roundStart,roundEnd).map((x,offset)=>{const i=roundStart+offset;return `<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:7px;font-size:12px;color:${i===state.index?'#17120a':x.safe?'#ffe3a1':'#aab8d7'};background:${i===state.index?'#f5bd4f':'transparent'};font-weight:${i===state.index?'900':'500'}"><span>${offset+1}. ${x.safe?'◆ ':''}${x.level}</span><b>${x.value.toLocaleString("es-CO")}</b></div>`}).reverse().join("");
  document.querySelectorAll(".life").forEach(b=>{const used=state.used.includes(b.dataset.life);b.disabled=role!=="host"||used||state.revealed||state.status!=="active";b.classList.toggle("used",used);b.title=used?"Ya utilizado en esta partida":role!=="host"?"Solo el presentador puede activar comodines":state.revealed?"Avanza a la siguiente pregunta para usar comodines":"Activar comodín para toda la sala"});
- $("revealBtn").disabled=role!=="host"||state.revealed||state.status!=="active";$("nextBtn").disabled=role!=="host"||!state.revealed;$("roomPlayers").innerHTML=`Participantes conectados: <b>${state.players.length}</b>${state.players.length?'<br>'+state.players.map(p=>`${escapeHtml(p.name)}${state.eliminated?.[p.id]?' — ❌ eliminado':''}`).join(", "):""}`;
+ $("startBtn").classList.toggle("hidden",role!=="host"||state.index!==0||state.status!=="waiting");$("startBtn").disabled=role!=="host"||state.status!=="waiting";$("revealBtn").disabled=role!=="host"||state.revealed||state.status!=="active";$("nextBtn").disabled=role!=="host"||!state.revealed;$("roomPlayers").innerHTML=`Participantes conectados: <b>${state.players.length}</b>${state.players.length?'<br>'+state.players.map(p=>`${escapeHtml(p.name)}${state.eliminated?.[p.id]?' — ❌ eliminado':''}`).join(", "):""}`;
 }
 function renderAnswerSelection(){document.querySelectorAll(".answer").forEach(b=>b.classList.toggle("selected",+b.dataset.i===selected));$("playerStatus").textContent="Respuesta seleccionada. Confirma tu voto.";if(!$("submitVote")){let b=document.createElement("button");b.id="submitVote";b.className="btn";b.textContent="Enviar respuesta";b.style.marginTop="10px";b.onclick=submitVote;$("playerStatus").appendChild(document.createElement("br"));$("playerStatus").appendChild(b)}}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -175,7 +179,7 @@ async function connect(url,key,roomCode,asRole,displayName){
        try{
          await channel.track({id:playerId,name,role});
          if(role==="host"){
-           state={...state,status:"active",players:[],scores:{},index:0,startedAt:Date.now(),revealed:false,finished:false,used:[],hidden:[],votes:{A:0,B:0,C:0,D:0},voteCount:0,answerers:{},eliminated:{}};
+           state={...state,status:"waiting",players:[],scores:{},index:0,startedAt:null,revealed:false,finished:false,used:[],hidden:[],votes:{A:0,B:0,C:0,D:0},voteCount:0,answerers:{},eliminated:{}};
            await send("state",{state});
          }else{
            await send("join",{id:playerId,name});
@@ -214,6 +218,11 @@ $("audienceJoinBtn").onclick=async()=>{
  const code=$("audienceCode").value.trim().toUpperCase(), n=$("audienceName").value.trim()||"Público";
  if(!url||!key||!code){toast("Completa código, URL y clave pública");return}
  try{await connect(url,key,code,"audience",n)}catch(e){toast("Error de conexión: "+e.message)}
+};
+$("startBtn").onclick=async()=>{
+ if(role!=="host"||state.index!==0||state.status!=="waiting")return;
+ state.status="active";state.startedAt=Date.now();state.revealed=false;lastTickSecond=-1;
+ await send("state",{state});render();effect("correct");toast("¡Primera pregunta iniciada!");
 };
 $("revealBtn").onclick=async()=>{
  const q=questions[state.index];state.answerers=state.answerers||{};state.eliminated=state.eliminated||{};state.players.forEach(p=>{
